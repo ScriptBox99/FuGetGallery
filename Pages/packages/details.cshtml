@@ -112,8 +112,10 @@
             var isEnum = t.IsEnum;
             var isStruct = !isEnum && t.IsValueType;
             var isDel = !(isEnum || isStruct) && t.IsDelegate();
-            var isIface = !(isEnum || isStruct || isDel) && (t.IsInterface || t.IsAbstract);
-            return isEnum ? "enum" : (isDel ? "delegate" : (isStruct ? "struct" : (isIface ? "interface" : "class")));
+            var isIface = !(isEnum || isStruct || isDel) && t.IsInterface;
+            var isSclass = !(isEnum || isStruct || isDel || isIface) && t.IsAbstract && t.IsSealed;
+            var isAclass = !(isEnum || isStruct || isDel || isIface || isSclass) && t.IsAbstract;
+            return isEnum ? "enum" : (isDel ? "delegate" : (isStruct ? "struct" : (isIface ? "interface" : (isSclass ? "staticclass" : (isAclass ? "abstractclass" : "class")))));
         }
         if (o is System.Linq.IGrouping<string, Mono.Cecil.TypeDefinition> g)
         {
@@ -312,7 +314,7 @@
     @if (dependents.Count > 0)
     {
         <nav style="margin-top:0em;line-height:2.75em;">
-            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Dependents</h4>
+            <h4 style="margin-top:0.5em;color:#777;display:inline-block;margin-right:0.5em;padding:0;">Used By</h4>
             @foreach (var d in (from d in dependents let r = rand.Next() orderby r select d).Take(maxDisplayDependents).OrderBy(x => x))
             {
                 <a class="btn btn-default btn-sm" style="color:#777"
@@ -401,11 +403,8 @@ else
                             var cls = (active ? "active " : "") + "public-api";
                             <li>
                                 <a class="@cls"
-                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)"
-                                   @*Rendering this title is problematic because it attempts to load the assembly*@
-                                   @*title="@a.Definition.Name.Version.ToString()"*@
-                                   >
-                                    <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
+                                   href="/packages/@Uri.EscapeDataString(package.Id)/@Uri.EscapeDataString(package.Version.ShortVersionString)/lib/@Uri.EscapeDataString(framework.Moniker)/@Uri.EscapeDataString(a.FileName)">
+                                   <span class="fugeticon fugeticon-@GetIcon(a)" aria-hidden="true"></span>&nbsp;@a.FileName
                                 </a>
                             </li>
                         }
